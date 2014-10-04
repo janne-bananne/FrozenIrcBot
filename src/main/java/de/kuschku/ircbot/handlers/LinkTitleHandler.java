@@ -38,17 +38,17 @@ public class LinkTitleHandler extends ListenerAdapter<PircBotX> {
 				.getInstance(Locale.US);
 
 		String result =
-				"%title [%duration|%views views]"
-				.replaceAll(
-						"%title",
-						new BoldText(StringEscapeUtils.unescapeHtml4(data.get("title").getAsString())).toString()
-				).replaceAll(
-						"%duration",
-						nicetime(data.get("duration").getAsString())
-				).replaceAll(
-						"%views",
-						formatter.format(data.get("viewCount").getAsInt())
-				);
+			"%title [%duration|%views views]"
+			.replaceAll(
+				"%title",
+				new BoldText(StringEscapeUtils.unescapeHtml4(data.get("title").getAsString())).toString()
+			).replaceAll(
+				"%duration",
+				nicetime(data.get("duration").getAsString())
+			).replaceAll(
+				"%views",
+				formatter.format(data.get("viewCount").getAsInt())
+			);
 		return result;
 	}
 
