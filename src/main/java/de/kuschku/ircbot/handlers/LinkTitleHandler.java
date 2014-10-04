@@ -160,7 +160,7 @@ public class LinkTitleHandler extends ListenerAdapter<PircBotX> {
 				event.getChannel()
 					.send()
 					.message(
-							formatData(getData(getID(getNiceUrl(getPage(result))))));
+						formatData(getData(getID(getNiceUrl(getPage(result))))));
 			} catch (MalformedURLException e) {
 				if (!e.getMessage().equalsIgnoreCase("No YouTube link"))
 					throw e;
