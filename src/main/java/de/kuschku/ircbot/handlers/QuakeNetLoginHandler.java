@@ -6,7 +6,7 @@ import org.pircbotx.hooks.events.ConnectEvent;
 
 import de.kuschku.ircbot.Client;
 
-public class LoginHandler extends ListenerAdapter<PircBotX> {
+public class QuakeNetLoginHandler extends ListenerAdapter<PircBotX> {
 	@Override
 	public void onConnect(ConnectEvent<PircBotX> event) throws Exception {
 		if (Boolean.valueOf(Client.fileConfiguration.get("use_auth"))) {

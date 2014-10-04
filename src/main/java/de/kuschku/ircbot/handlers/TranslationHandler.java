@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -25,21 +26,18 @@ public class TranslationHandler extends ListenerAdapter<PircBotX> {
 			{ "user-agent","NokiaN97/21.1.107 (SymbianOS/9.4; Series60/5.0 Mozilla/5.0; Profile/MIDP-2.1 Configuration/CLDC-1.1) AppleWebkit/525 (KHTML, like Gecko) BrowserNG/7.1.4" }
 			};
 
-	static final String URL = "https://translate.google.com/translate_a/single?client=webapp&sl=%s&tl=%s&dt=bd&dt=ld&dt=qc&dt=rm&dt=t&dj=1&q=";
+	static final String URL = "https://translate.google.com/translate_a/single?client=webapp&sl=%lang_origin&tl=%lang_target&dt=bd&dt=ld&dt=qc&dt=rm&dt=t&dj=1&q=";
 
 	@Override
 	public void onMessage(MessageEvent<PircBotX> event) throws Exception {
-		System.out.println(event.getMessage());
-		if(event.getMessage().toLowerCase().startsWith("!trans ") || event.getMessage().toLowerCase().startsWith("!trans:") ) {
-			String from = "auto";
-			
+		if(event.getMessage().toLowerCase().startsWith("!trans ") || event.getMessage().toLowerCase().startsWith("!trans:") ) {		
 			String args = event.getMessage().substring("!trans".length());
 			String lang_args = args.substring(0,args.indexOf(" ")).trim();
 			String[] specified_languages = lang_args.split(":");
 			
 			String request = args.substring(args.indexOf(" ")).trim();
 			
-			JsonObject json = getResults(URLEncoder.encode(request),specified_languages);
+			JsonObject json = getResults(URLEncoder.encode(request,"UTF-8"),specified_languages);
 			String sentence = getSentencesFromJson(json);
 			String langs = formatLangs(getLanguagesFromJson(json));
 			
@@ -54,13 +52,13 @@ public class TranslationHandler extends ListenerAdapter<PircBotX> {
 		URL resourceUrl;
 		switch (langs.length) {
 		case 1:
-			resourceUrl = new URL(String.format(URL,"auto","en") + request);
+			resourceUrl = new URL(URL.replaceAll("%lang_origin", "auto").replaceAll("%lang_target", "en") + request);
 			break;
 		case 2:
-			resourceUrl = new URL(String.format(URL,"auto",langs[1]) + request);
+			resourceUrl = new URL(URL.replaceAll("%lang_origin", "auto").replaceAll("%lang_target", langs[1]) + request);
 			break;
 		default:
-			resourceUrl = new URL(String.format(URL,langs[2],langs[1]) + request);
+			resourceUrl = new URL(URL.replaceAll("%lang_origin", langs[2]).replaceAll("%lang_target", langs[1]) + request);
 		}
 		HttpURLConnection.setFollowRedirects(true);
 		HttpURLConnection conn = (HttpURLConnection) resourceUrl
@@ -111,35 +109,8 @@ public class TranslationHandler extends ListenerAdapter<PircBotX> {
 		return "[" + origin.substring(1) + "]";
 	}
 	
-	/*
-	static final void test(String input) {
-		try {
-			String from = "auto";
-			
-			String margs = input.substring("!trans".length());
-			String lang_args = margs.substring(0,margs.indexOf(" "));
-			String[] specified_languages = lang_args.split(":");
-			
-			String mrequest = margs.substring(margs.indexOf(" ")).trim();
-			
-			JsonObject json = getResults(URLEncoder.encode(mrequest),specified_languages);
-			String sentence = getSentencesFromJson(json);
-			String langs = formatLangs(getLanguagesFromJson(json));
+	public static void main(String[] args) throws MalformedURLException {
 		
-			System.out.println(langs + " " + 
-							new BoldText(sentence).toString());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
 	}
-
-	public static void main(String[] args) {
-		test("!trans Jeg elsker deg");
-		test("!trans:DE Jeg elsker deg");
-		test("!trans:DE:DA Jeg elsker deg");
-	}
-	
-	*/
-
 }

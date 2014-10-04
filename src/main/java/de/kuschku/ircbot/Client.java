@@ -3,6 +3,8 @@ package de.kuschku.ircbot;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -10,6 +12,8 @@ import org.kohsuke.args4j.Option;
 import org.pircbotx.Configuration;
 import org.pircbotx.PircBotX;
 import org.pircbotx.hooks.Listener;
+
+import de.kuschku.ircbot.handlers.QuakeNetLoginHandler;
 
 public class Client {
 	
@@ -27,8 +31,9 @@ public class Client {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public Client(Options options) {
+		Logger.getLogger(Client.class.getCanonicalName()).setLevel(Level.WARNING);
+		
 		try {
 			fileConfiguration = FileConfiguration.fromFile(new File(options.configpath));
 		} catch (FileNotFoundException e1) {
@@ -42,20 +47,23 @@ public class Client {
 				.setAutoNickChange(false).setCapEnabled(true)
 				.setServerHostname(fileConfiguration.get("hostname"));
 		
+		switch (fileConfiguration.get("auth_type")) {
+		case "NickServ":
+			builder.setNickservPassword(fileConfiguration.get("auth_password"));
+			break;
+		case "TheQBot":
+			enableHandler(builder,QuakeNetLoginHandler.class.getCanonicalName());
+			break;
+		default:
+			break;
+		}
+		
 		for (String channel : fileConfiguration.get("channel").split(",")) {
 			builder.addAutoJoinChannel(channel);
 		}
 
 		for (String handler : fileConfiguration.get("handler").split(",")) {
-			try {
-				builder.addListener((Listener<PircBotX>) newInstance(handler));
-			} catch (ClassNotFoundException | NoSuchMethodException
-					| InstantiationException | IllegalAccessException
-					| IllegalArgumentException | InvocationTargetException e) {
-				System.err
-						.println("Handler could not be activated: " + handler);
-				e.printStackTrace();
-			}
+			enableHandler(builder,handler);
 		}
 
 		this.bot = new PircBotX(builder.buildConfiguration());
@@ -63,13 +71,28 @@ public class Client {
 		try {
 			this.bot.startBot();
 		} catch (Exception ex) {
-			ex.printStackTrace();
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static void enableHandler(Configuration.Builder<PircBotX> builder, String handler) {
+		try {
+			builder.addListener((Listener<PircBotX>) newInstance(handler));
+			Client.log(Level.INFO,"Successfully loaded handler "+handler);
+		} catch (ClassNotFoundException | NoSuchMethodException
+				| InstantiationException | IllegalAccessException
+				| IllegalArgumentException | InvocationTargetException e) {
+			Client.log(Level.WARNING,"Handler could not be activated: " + handler);
 		}
 	}
 
 	public static class Options {
 		@Option(name = "-config")
 		private String configpath = "config.yml";
+	}
+	
+	public static void log(Level level, String message) {
+		Logger.getLogger(Client.class.getCanonicalName()).log(level, message);
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })

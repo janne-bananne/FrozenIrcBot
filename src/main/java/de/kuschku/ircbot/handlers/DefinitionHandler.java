@@ -18,45 +18,11 @@ import com.wordnik.client.model.Definition;
 
 import de.kuschku.ircbot.Client;
 import de.kuschku.ircbot.Helper;
+import de.kuschku.ircbot.Helper.URLParamEncoder;
 import de.kuschku.ircbot.format.BoldText;
 import de.kuschku.ircbot.format.ItalicText;
 
 public class DefinitionHandler extends ListenerAdapter<PircBotX> {
-
-	public static class URLParamEncoder {
-
-		public static String encode(String input) {
-			StringBuilder resultStr = new StringBuilder();
-			for (char ch : input.toCharArray()) {
-				if (isUnsafe(ch)) {
-					resultStr.append('%');
-					resultStr.append(toHex(ch / 16));
-					resultStr.append(toHex(ch % 16));
-				} else {
-					resultStr.append(ch);
-				}
-			}
-			return resultStr.toString();
-		}
-
-		private static boolean isUnsafe(char ch) {
-			if (ch > 128 || ch < 0)
-				return true;
-			return " %$&+,/:;=?@<>#%".indexOf(ch) >= 0;
-		}
-
-		private static char toHex(int ch) {
-			return (char) (ch < 10 ? '0' + ch : 'A' + ch - 10);
-		}
-
-	}
-	
-	static final String truncate(String input) {
-		if (input.length()>150)
-			return input.substring(0,150)+"…";
-		else
-			return input;
-	}
 
 	@Override
 	public void onMessage(MessageEvent<PircBotX> event) throws Exception {
@@ -84,7 +50,7 @@ public class DefinitionHandler extends ListenerAdapter<PircBotX> {
 			List<String> list = backend.getDefinition(word, amount);
 
 			if (list.size() > 0) {
-				list.forEach(msg -> event.getChannel().send().message(truncate(msg)));
+				list.forEach(msg -> event.getChannel().send().message(Helper.truncate(msg,150)));
 
 				event.getChannel().send().message(backend.getFooter(word));
 			} else {
@@ -163,12 +129,12 @@ public class DefinitionHandler extends ListenerAdapter<PircBotX> {
 
 		@Override
 		public List<String> getDefinition(String word, int amount) {
+			final String url = "http://api.urbandictionary.com/v0/define?term=%query&key=key".replaceAll("%query", word).replaceAll("%key", key);
+			
 			word = URLParamEncoder.encode(word);
 			try {
 				JsonObject result = Helper
-						.readJsonFromUrl(String
-								.format("http://api.urbandictionary.com/v0/define?term=%s&key=%s",
-										word, key));
+						.readJsonFromUrl(url);
 				JsonArray definitions = result.get("list").getAsJsonArray();
 				List<String> results = new ArrayList<String>();
 				String definition;
