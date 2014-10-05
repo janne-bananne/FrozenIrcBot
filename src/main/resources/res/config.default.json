@@ -1,17 +1,8 @@
-FrozenIrcBot
-============
-
-Functionality
--------------
-
-Configuration
--------------
-```json
  {
     "connection": {
         "host": "irc.quakenet.org",
         "channels": [
-            "#frozen"
+            "#frozenprogramming"
         ],
         "authentication": {
             "type": "none",
@@ -28,9 +19,3 @@ Configuration
         },
     }
 }
-```
-
-To-Do
------
-
- - finish the Readme
