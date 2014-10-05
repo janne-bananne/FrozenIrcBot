@@ -10,6 +10,7 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
@@ -17,8 +18,10 @@ import java.util.zip.ZipFile;
 
 import org.pircbotx.Configuration;
 import org.pircbotx.PircBotX;
+import org.pircbotx.hooks.Listener;
 import org.pircbotx.hooks.ListenerAdapter;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -68,7 +71,7 @@ public class PluginHandler {
 		return handler;
 	}
 	
-	ListenerAdapter<PircBotX> enableHandler(String handler) throws ClassNotFoundException, NoSuchMethodException
+	static final ListenerAdapter<PircBotX> enableHandler(String handler) throws ClassNotFoundException, NoSuchMethodException
 				, InstantiationException , IllegalAccessException
 				, IllegalArgumentException , InvocationTargetException {
 		try {
@@ -82,7 +85,7 @@ public class PluginHandler {
 		}
 	}
 	
-	JsonArray getHandlersFromJar(File jar) throws ZipException, IOException {
+	static JsonArray getHandlersFromJar(File jar) throws ZipException, IOException {
 	    ZipFile zipFile = new ZipFile(jar);
 	    Enumeration<? extends ZipEntry> entries = zipFile.entries();
 
@@ -98,7 +101,7 @@ public class PluginHandler {
 	    throw new FileNotFoundException();
 	}
 	
-	List<String> loadPlugin(File jar) throws ZipException, IOException, ClassNotFoundException {
+	static List<String> loadPlugin(File jar) throws ZipException, IOException, ClassNotFoundException {
 		JsonArray handlers = getHandlersFromJar(jar);
 		List<String> classnames = new ArrayList<String>();
 		handlers.forEach(json -> classnames.add(json.getAsString()));
@@ -139,5 +142,36 @@ public class PluginHandler {
     	}
         catch (Exception e) {
         }
+    }
+    
+    public static void loadHandler(Listener<PircBotX> handler) {
+    	Client.getClient().bot.getConfiguration().getListenerManager().addListener(handler);
+    }
+    
+    public static void unloadHandler(Listener<PircBotX> handler) {
+    	Client.getClient().bot.getConfiguration().getListenerManager().removeListener(handler);
+    }
+    
+    public static Set<Listener<PircBotX>> listHandlers() {
+    	return Client.getClient().bot.getConfiguration().getListenerManager().getListeners();
+    }
+    
+    public static void loadLib(String filename) {
+    	try {
+			List<String> handlers = loadPlugin(new File(Client.getClient().options.pluginpath,filename));;
+			handlers.forEach(handler -> {try {loadHandler(enableHandler(handler));} catch (Exception e) {}});
+		} catch (ClassNotFoundException | IOException e) {
+			e.printStackTrace();
+		}
+    }
+    
+    public static ImmutableSet<String> listLibs() {
+    	List<String> list = new ArrayList<String>();
+		for (File file : new File(Client.getClient().options.pluginpath).listFiles()) {
+			if (file.isFile() && file.getName().endsWith(".jar")) {
+				list.add(file.getName());
+			}
+		}
+		return ImmutableSet.copyOf(list);
     }
 }

@@ -19,8 +19,10 @@ import de.kuschku.ircbot.handlers.QuakeNetLoginHandler;
 
 public class Client {
 
-	static JsonObject fileConfiguration;
-	private PircBotX bot;
+	JsonObject fileConfiguration;
+	PircBotX bot;
+	static Client client;
+	public Options options;
 
 	public static void main(String[] args) {
 		Options options = new Options();
@@ -34,6 +36,8 @@ public class Client {
 	}
 
 	public Client(Options options) {
+		Client.client = this;
+		this.options = options;
 		try {
 			fileConfiguration = FileConfiguration.fromFile(new File(
 					options.configpath));
@@ -52,6 +56,7 @@ public class Client {
 				.setServerHostname(connection.get("host").getAsString());
 		
 		PluginHandler handler = new PluginHandler(builder);
+		handler.addHandler("de.kuschku.ircbot.handlers.ControlHandler");
 
 		switch (connection.getAsJsonObject("authentication").get("type").getAsString()) {
 		case "NickServ":
@@ -78,11 +83,9 @@ public class Client {
 	}
 
 	public static class Options {
-		@Option(name = "-config")
-		private String configpath = "config.json";
-
+		@Option(name = "-config") String configpath = "config.json";
 		@Option(name = "-plugins")
-		private String pluginpath = "plugins";
+		public String pluginpath = "plugins";
 	}
 
 	public static void log(Level level, String message) {
@@ -94,11 +97,15 @@ public class Client {
 		privilegedList.add(QuakeNetLoginHandler.class.getCanonicalName());
 		
 		if (privilegedList.contains(caller.getCanonicalName())) {
-			return fileConfiguration;
-		} else if (fileConfiguration.has(caller.getCanonicalName())) {
-			return fileConfiguration.getAsJsonObject(caller.getCanonicalName());
+			return Client.getClient().fileConfiguration;
+		} else if (Client.getClient().fileConfiguration.has(caller.getCanonicalName())) {
+			return Client.getClient().fileConfiguration.getAsJsonObject(caller.getCanonicalName());
 		} else {
 			return new JsonObject();
 		}
+	}
+	
+	public static final Client getClient() {
+		return Client.client;
 	}
 }
