@@ -159,7 +159,11 @@ public class PluginHandler {
     public static void loadLib(String filename) {
     	try {
 			List<String> handlers = loadPlugin(new File(Client.getClient().options.pluginpath,filename));;
-			handlers.forEach(handler -> {try {loadHandler(enableHandler(handler));} catch (Exception e) {}});
+			handlers.forEach(handler -> {try {unloadHandler(listHandlers()
+					.parallelStream()
+					.filter(x -> x.getClass().getCanonicalName()
+							.equalsIgnoreCase(handler))
+					.findFirst().get());} catch (Exception e) {} try {loadHandler(enableHandler(handler));} catch (Exception e) {}});
 		} catch (ClassNotFoundException | IOException e) {
 			e.printStackTrace();
 		}

@@ -69,7 +69,6 @@ public class ControlHandler extends ListenerAdapter<PircBotX> {
 				case "!libs":
 					switch (args[1].toLowerCase(Locale.ROOT)) {
 					case "list":
-						System.out.println(args[1]);
 						// List plugins
 						ImmutableSet<String> list = PluginHandler.listLibs();
 						event.getUser()
@@ -84,12 +83,29 @@ public class ControlHandler extends ListenerAdapter<PircBotX> {
 								.notice(" - " + handler));
 						break;
 					case "load":
-						System.out.println(args[1]);
 						// Enable one plugin
 						String libName = args[2];
 						PluginHandler.loadLib(libName);
 						event.getUser().send()
 								.notice("Lib has been loaded: " + args[2]);
+						break;
+					}
+					break;
+				case "!reload":
+					switch (args[1].toLowerCase(Locale.ROOT)) {
+					case "config":
+						// List plugins
+						ImmutableSet<String> list = PluginHandler.listLibs();
+						event.getUser()
+								.send()
+								.notice(String.format(
+										"%d Lib-File(s) available in %s",
+										list.size(),
+										new File(
+												Client.getClient().options.pluginpath)
+												.getAbsolutePath()));
+						list.forEach(handler -> event.getUser().send()
+								.notice(" - " + handler));
 						break;
 					}
 					break;

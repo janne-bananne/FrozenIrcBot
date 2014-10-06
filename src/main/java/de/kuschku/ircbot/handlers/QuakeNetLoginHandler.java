@@ -11,7 +11,7 @@ import de.kuschku.ircbot.Client;
 public class QuakeNetLoginHandler extends ListenerAdapter<PircBotX> {
 	@Override
 	public void onConnect(ConnectEvent<PircBotX> event) throws Exception {
-		JsonObject auth = Client.getConfig(QuakeNetLoginHandler.class).getAsJsonObject("connection").getAsJsonObject("authentication");
+		JsonObject auth = Client.getConfig(QuakeNetLoginHandler.class.getCanonicalName()).getAsJsonObject("connection").getAsJsonObject("authentication");
 		String authName = auth.get("name").getAsString();
 		String authPassword = auth.get("password").getAsString();
 		event.getBot().sendRaw().rawLine(String.format("AUTH %s %s",authName,authPassword));

@@ -71,7 +71,7 @@ public class Client {
 
 		connection.get("channels").getAsJsonArray().forEach(element -> builder.addAutoJoinChannel(element.getAsString()));
 		
-		handler.loadPlugins(new File(options.pluginpath));		
+		handler.loadPlugins(new File(options.pluginpath));
 		handler.build();
 
 		this.bot = new PircBotX(builder.buildConfiguration());
@@ -92,14 +92,14 @@ public class Client {
 		Logger.getLogger(Client.class.getCanonicalName()).log(level, message);
 	}
 	
-	public static JsonObject getConfig(@SuppressWarnings("rawtypes") Class caller) {
+	public static JsonObject getConfig(String className) {
 		List<String> privilegedList = new ArrayList<String> ();
 		privilegedList.add(QuakeNetLoginHandler.class.getCanonicalName());
 		
-		if (privilegedList.contains(caller.getCanonicalName())) {
+		if (privilegedList.contains(className)) {
 			return Client.getClient().fileConfiguration;
-		} else if (Client.getClient().fileConfiguration.has(caller.getCanonicalName())) {
-			return Client.getClient().fileConfiguration.getAsJsonObject(caller.getCanonicalName());
+		} else if (Client.getClient().fileConfiguration.getAsJsonObject("plugins").has(className)) {
+			return Client.getClient().fileConfiguration.getAsJsonObject("plugins").getAsJsonObject(className);
 		} else {
 			return new JsonObject();
 		}
@@ -107,5 +107,14 @@ public class Client {
 	
 	public static final Client getClient() {
 		return Client.client;
+	}
+	
+	public void reloadConfig() {
+		try {
+			fileConfiguration = FileConfiguration.fromFile(new File(
+					options.configpath));
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		}
 	}
 }
