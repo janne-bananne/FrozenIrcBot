@@ -18,7 +18,6 @@ public class ControlHandler extends ListenerAdapter<PircBotX> {
 	@Override
 	public void onPrivateMessage(PrivateMessageEvent<PircBotX> event) {
 		if (event.getUser().getHostmask().equalsIgnoreCase("kuschku.de")) {
-
 			String message = event.getMessage();
 			String[] args = message.split(" ");
 			if (message.startsWith("!")) {
